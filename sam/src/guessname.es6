@@ -1,4 +1,4 @@
-import {SamSpeak as Renderer} from './sam/sam.es6';
+import { SamSpeak as Renderer } from './sam/sam.es6';
 
 const lookup_ones = ["WAHN", "TUW5", "THRIY5", "FOHR5", "FAY5V", "SIH5KS", "SEH5VUN", "EY5T", "NAY5N"];
 const lookup_teens = [
@@ -13,8 +13,7 @@ const lookup_teens = [
   "EY4TIY6N",
   "NAY4NTIY6N",
 ];
-const lookup_tens =
-  ["TWEHNTIY", "THERTIY", "FOHRTIY", "FIH4FTIY6", "SIHKSTIY6", "SEH4VUNTIY6", "EY4T1Y6", "NAY4NTIY6"];
+const lookup_tens = ["TWEHNTIY", "THERTIY", "FOHRTIY", "FIH4FTIY6", "SIHKSTIY6", "SEH4VUNTIY6", "EY4T1Y6", "NAY4NTIY6"];
 
 const GUESS_A_NUMBER_BETWEEN_0_AND_ONE_HUNDRED = 'GEH3S DHAX NAH4MBER BIXTWIY5N WAH4N Q AEND WAHN /HAH4NDRIHD';
 const THATS_MORE_THAN_100 = 'DHAET IHZ MAOR DHAEN WAHN /HAH5NDRIHD';
@@ -47,46 +46,46 @@ function numberToPhonemes(number) {
  * @param {Element} e
  */
 function GuessNum(e) {
-    const output = e.ownerDocument.createElement('pre');
-    const button = e.ownerDocument.createElement('button');
-    const input  = e.ownerDocument.createElement('input');
-    const show = (e) => e.style.display = 'inline-block';
-    const hide = (e) => e.style.display = 'none';
-    let number
-    e.appendChild(output);
-    e.appendChild(button);
-    e.appendChild(input);
-    hide(input);
-    button.type='button';
-    button.innerText = 'Start game';
-    button.addEventListener('click', function() {
-      output.textContent = '';
-      number = Math.floor((Math.random() * 99) + 1);
-      say(GUESS_A_NUMBER_BETWEEN_0_AND_ONE_HUNDRED);
-      hide(button);
-      show(input);
-    });
-    function say(phonemes, raw) {
-      let text = phonemes;
-      while (text.length < 256) {
-        text += ' '
-      }
-      if (raw) {
-        output.innerText += "\n" + raw;
-      }
-      Renderer(phonemes);
+  const output = e.ownerDocument.createElement('pre');
+  const button = e.ownerDocument.createElement('button');
+  const input = e.ownerDocument.createElement('input');
+  const show = (e) => e.style.display = 'inline-block';
+  const hide = (e) => e.style.display = 'none';
+  let number;
+  e.appendChild(output);
+  e.appendChild(button);
+  e.appendChild(input);
+  hide(input);
+  button.type = 'button';
+  button.innerText = 'Start game';
+  button.addEventListener('click', function () {
+    output.textContent = '';
+    number = Math.floor((Math.random() * 99) + 1);
+    say(GUESS_A_NUMBER_BETWEEN_0_AND_ONE_HUNDRED);
+    hide(button);
+    show(input);
+  });
+  function say(phonemes, raw) {
+    let text = phonemes;
+    while (text.length < 256) {
+      text += ' '
     }
-    input.onkeydown = (e) => {
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        if (guess(parseInt(input.value))) {
-          output.innerText = "\n" + output.innerText.split("\n").pop();
-          hide(input);
-          show(button);
-        }
-        input.value = '';
+    if (raw) {
+      output.innerText += "\n" + raw;
+    }
+    Renderer(phonemes);
+  }
+  input.onkeydown = (e) => {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      if (guess(parseInt(input.value))) {
+        output.innerText = "\n" + output.innerText.split("\n").pop();
+        hide(input);
+        show(button);
       }
-    };
+      input.value = '';
+    }
+  };
 
   /**
    * Guess the number.
