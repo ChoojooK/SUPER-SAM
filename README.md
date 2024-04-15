@@ -1,7 +1,7 @@
 <h1>SAM</h1>
 SAM (Software Automatic Mouth) is a text-to-speech (TTS) synthesis system originally developed by Softvoice, Inc. in the early 1980s. It was designed to generate human-like speech from written input, providing a natural-sounding voice for various applications. SAM utilizes formant synthesis techniques to produce speech, allowing it to accurately replicate the sounds of human speech. This GitHub repository contains an upgraded and improved version of SAM, implemented in modern JavaScript (ES6), offering enhanced functionality and performance compared to the original implementation. With SAM, developers can integrate high-quality text-to-speech capabilities into their applications, enabling natural and engaging user interactions.
 <h2>Usage</h2>
-<a href="https://supersam.rf.gd">Try SUPER SAM</a>
+<a href="https://supersam.rf.gd">Try SUPER SAM (It's Free)</a>
 
 ### Support SAM Development
 
