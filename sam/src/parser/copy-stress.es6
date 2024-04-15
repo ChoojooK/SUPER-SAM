@@ -1,6 +1,5 @@
-import {END} from '../common/constants.es6'
-import {FLAG_VOWEL, FLAG_CONSONANT} from './constants.es6'
-
+import { END } from '../common/constants.es6';
+import { FLAG_VOWEL, FLAG_CONSONANT } from './constants.es6';
 import { phonemeHasFlag } from './util.es6';
 
 /**
@@ -12,7 +11,7 @@ import { phonemeHasFlag } from './util.es6';
  *
  *  In those cases, the stress value+1 from the following phoneme is copied.
  *
- * For example, the word LOITER is represented as LOY5TER, with as stress
+ * For example, the word LOITER is represented as LOY5TER, with a stress
  * of 5 on the diphthong OY. This routine will copy the stress value of 6 (5+1)
  * to the L that precedes it.
  *
@@ -23,20 +22,14 @@ import { phonemeHasFlag } from './util.es6';
  * @return undefined
  */
 export default function CopyStress(getPhoneme, getStress, setStress) {
-  // loop through all the phonemes to be output
   let position = 0;
   let phoneme;
-  while((phoneme = getPhoneme(position)) !== END) {
-    // if CONSONANT_FLAG set, skip - only vowels get stress
+  while ((phoneme = getPhoneme(position)) !== END) {
     if (phonemeHasFlag(phoneme, FLAG_CONSONANT)) {
       phoneme = getPhoneme(position + 1);
-      // if the following phoneme is the end, or a vowel, skip
       if ((phoneme !== END) && phonemeHasFlag(phoneme, FLAG_VOWEL)) {
-        // get the stress value at the next position
         let stress = getStress(position + 1);
         if ((stress !== 0) && (stress < 0x80)) {
-          // if next phoneme is stressed, and a VOWEL OR ER
-          // copy stress from next phoneme to this one
           setStress(position, stress + 1);
         }
       }
