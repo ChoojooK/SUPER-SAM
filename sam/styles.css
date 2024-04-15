@@ -8,7 +8,7 @@ body {
   padding: 20px;
 }
 
-h1, h2 {
+h1, h2, h4 {
   text-align: center;
   color: #333;
 }
@@ -86,4 +86,8 @@ button:hover {
 
 #fmm2 {
   margin-bottom: 20px;
+}
+
+.donate {
+  font-size: 14px;
 }
