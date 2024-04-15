@@ -1,13 +1,13 @@
-function debugLog () {
-  console.log.apply(console, arguments)
+function debugLog(...args) {
+  console.log(...args);
 }
 
-function debugError () {
-  console.error.apply(console, arguments)
+function debugError(...args) {
+  console.error(...args);
 }
 
-function debugWarn () {
-  console.warn.apply(console, arguments)
+function debugWarn(...args) {
+  console.warn(...args);
 }
 
 const makeDebug = (debug) => {
@@ -20,8 +20,8 @@ const makeDebug = (debug) => {
   }
   return {
     log:  () => {},
-    warn: () => {alert(arguments.join(', '))},
-    error: () => {alert(arguments.join(', '))}
+    warn: (...args) => { alert(args.join(', ')); },
+    error: (...args) => { alert(args.join(', ')); }
   };
 };
 
