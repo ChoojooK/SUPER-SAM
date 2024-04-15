@@ -1,56 +1,53 @@
 export default class Uint8 {
-  constructor(value) {
-    this.set(value || 0);
-  }
+constructor(value) {
+this.set(value || 0);
+}
 
-  /**
-   * Retrieve the value.
-   * @returns {Number}
-   */
-  get () {
-    return this._value;
-  }
+/**
+* Retrieve the value.
+* @returns {Number}
+*/
+get() {
+return this._value;
+}
 
-  /**
-   * Set the value.
-   *
-   * @param {Number} value
-   *
-   * @returns {Uint8}
-   */
-  set (value) {
-    this._value = value & 0xFF;
+/**
+* Set the value.
+*
+* @param {Number} value
+*
+* @returns {Uint8}
+*/
+set(value) {
+this._value = value & 0xFF;
+return this;
+}
 
-    return this;
-  }
+/**
+* Increment.
+*
+* @param {Number} [delta=1]
+*
+* @returns {Uint8}
+*/
+inc(delta = 1) {
+this.set(this.get() + delta);
+return this;
+}
 
-  /**
-   * Increment.
-   *
-   * @param {Number} [delta]
-   *
-   * @returns {Uint8}
-   */
-  inc(delta) {
-    this.set(this.get() + (delta || 1));
+/**
+* Decrement.
+*
+* @param {Number} [delta=1]
+*
+* @returns {Uint8}
+*/
+dec(delta = 1) {
+this.set(this.get() - delta);
+return this;
+}
 
-    return this;
-  }
-
-  /**
-   * Decrement.
-   *
-   * @param {Number} [delta]
-   *
-   * @returns {Uint8}
-   */
-  dec(delta) {
-    this.set(this.get() - (delta || 1));
-
-    return this;
-  }
-
-  valueOf() {
-    return this.get();
-  }
+valueOf() {
+return this.get();
+}
 }
