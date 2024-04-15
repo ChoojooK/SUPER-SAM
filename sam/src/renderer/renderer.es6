@@ -3,58 +3,59 @@ import {
   sampleTable
 } from './tables.es6';
 
-import {BREAK, END} from '../common/constants.es6'
+import { BREAK, END } from '../common/constants.es6';
 
-import SetMouthThroat from './set-mouth-throat.es6'
-import CreateTransitions from './create-transitions.es6';
-import CreateFrames from './create-frames.es6';
-import CreateOutputBuffer from './output-buffer.es6';
+import setMouthThroat from './set-mouth-throat.es6';
+import createTransitions from './create-transitions.es6';
+import createFrames from './create-frames.es6';
+import createOutputBuffer from './output-buffer.es6';
+
 /**
  * @param {Array} phonemes
  * @param {Number} [pitch]
  * @param {Number} [mouth]
  * @param {Number} [throat]
  * @param {Number} [speed]
- * @param {Boolean} [singmode]
+ * @param {Boolean} [singMode]
  *
  * @return Uint8Array
  */
-export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode) {
+export default function renderer(phonemes, pitch, mouth, throat, speed, singMode) {
   pitch = (pitch === undefined) ? 64 : pitch & 0xFF;
   mouth = (mouth === undefined) ? 128 : mouth & 0xFF;
   throat = (throat === undefined) ? 128 : throat & 0xFF;
   speed = (speed || 72) & 0xFF;
-  singmode = singmode || false;
+  singMode = singMode || false;
 
   // Every frame is 20ms long.
-  const Output = CreateOutputBuffer(
+  const output = createOutputBuffer(
     441 // = (22050/50)
     * phonemes.reduce((pre, v) => pre + (v[1] * 20), 0) / 50 // Combined phoneme length in ms.
     * speed | 0 // multiplied by speed.
   );
 
-  const freqdata = SetMouthThroat(mouth, throat);
+  const freqData = setMouthThroat(mouth, throat);
 
   // Main render loop.
-  let srcpos  = 0; // Position in source
+  let srcPos  = 0; // Position in source
   // FIXME: should be tuple buffer as well.
   let tuples = [];
-  while(1) {
-    const A = phonemes[srcpos];
-    const A0 = A[0]
+  while (true) {
+    const A = phonemes[srcPos];
+    const A0 = A[0];
     if (A0) {
       if (A0 === END) {
-        Render(tuples);
-        return Output.get();
+        render(tuples);
+        return output.get();
       }
       if (A0 === BREAK) {
-        Render(tuples);
+        render(tuples);
         tuples = [];
       } else {
         tuples.push(A);
       }
     }
-    ++srcpos;
+    ++srcPos;
   }
 
   /**
@@ -74,32 +75,32 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
    *
    * @param {Array} tuples
    */
-  function Render (tuples) {
+  function render(tuples) {
     if (tuples.length === 0) {
-      return; //exit if no data
+      return; // exit if no data
     }
 
-    const [pitches, frequency, amplitude, sampledConsonantFlag] = CreateFrames(
+    const [pitches, frequency, amplitude, sampledConsonantFlag] = createFrames(
       pitch,
       tuples,
-      freqdata
+      freqData
     );
 
-    const t = CreateTransitions(
+    const t = createTransitions(
       pitches,
       frequency,
       amplitude,
       tuples
     );
 
-    if (!singmode) {
+    if (!singMode) {
       /* ASSIGN PITCH CONTOUR
        *
        * This subtracts the F1 frequency from the pitch to create a
        * pitch contour. Without this, the output would be at a single
        * pitch level (monotone).
        */
-      for(let i = 0; i < pitches.length; i++) {
+      for (let i = 0; i < pitches.length; i++) {
         // subtract half the frequency of the formant 1.
         // this adds variety to the voice
         pitches[i] -= (frequency[0][i] >> 1);
@@ -114,20 +115,20 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
     const amplitudeRescale = [
       0x00, 0x01, 0x02, 0x02, 0x02, 0x03, 0x03, 0x04,
       0x04, 0x05, 0x06, 0x08, 0x09, 0x0B, 0x0D, 0x0F,
-      0x00  //17 elements?
+      0x00  // 17 elements?
     ];
-    for(let i = amplitude[0].length - 1; i >= 0; i--) {
+    for (let i = amplitude[0].length - 1; i >= 0; i--) {
       amplitude[0][i] = amplitudeRescale[amplitude[0][i]];
       amplitude[1][i] = amplitudeRescale[amplitude[1][i]];
       amplitude[2][i] = amplitudeRescale[amplitude[2][i]];
     }
 
     if (process.env.DEBUG_SAM === true) {
-      PrintOutput(pitches, frequency, amplitude, sampledConsonantFlag);
+      printOutput(pitches, frequency, amplitude, sampledConsonantFlag);
     }
     if (process.env.NODE_ENV === 'karma-test') {
       // Karma run, store data for karma retrieval.
-      Renderer.karmaOutput = {
+      renderer.karmaOutput = {
         sampledConsonantFlag: sampledConsonantFlag,
         amplitude1: amplitude[0],
         frequency1: frequency[0],
@@ -136,13 +137,13 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
         amplitude3: amplitude[2],
         frequency3: frequency[2],
         pitches: pitches,
-        freq1data: freqdata[0],
-        freq2data: freqdata[1],
-        freq3data: freqdata[2],
+        freq1data: freqData[0],
+        freq2data: freqData[1],
+        freq3data: freqData[2],
       };
     }
 
-    ProcessFrames(t, speed, frequency, pitches, amplitude, sampledConsonantFlag);
+    processFrames(t, speed, frequency, pitches, amplitude, sampledConsonantFlag);
   }
 
   /**
@@ -155,8 +156,8 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
    * To simulate them being driven by the glottal pulse, the waveforms are
    * reset at the beginning of each glottal pulse.
    */
-  function ProcessFrames(frameCount, speed, frequency, pitches, amplitude, sampledConsonantFlag) {
-    const RenderSample = (mem66, consonantFlag, mem49) => {
+  function processFrames(frameCount, speed, frequency, pitches, amplitude, sampledConsonantFlag) {
+    const renderSample = (mem66, consonantFlag, mem49) => {
       // mem49 == current phoneme's index - unsigned char
 
       // mask low three bits and subtract 1 get value to
@@ -170,30 +171,29 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
       // /H                     3          0x17
       // /X                     4          0x17
 
-      const hi = kind * 256 & 0xFFFF; // unsigned short
-      let off
+      const hi = kind * 256 & 0xFFFF; // unsigned let off;
       // voiced sample?
       const pitch = consonantFlag & 248; // unsigned char
 
-      function renderSample (index1, value1, index2, value2) {
+      function renderSample(index1, value1, index2, value2) {
         let bit = 8;
-        let sample = sampleTable[hi+off]
+        let sample = sampleTable[hi+off];
         do {
           if ((sample & 128) !== 0) {
-            Output(index1, value1);
+            output(index1, value1);
           } else {
-            Output(index2, value2);
+            output(index2, value2);
           }
           sample <<= 1;
         } while(--bit);
       }
 
-      if(pitch === 0) {
+      if (pitch === 0) {
         // voiced phoneme: Z*, ZH, V*, DH
         let phase1 = (pitches[mem49 & 0xFF] >> 4) ^ 255 & 0xFF; // unsigned char
         off = mem66 & 0xFF; // unsigned char
         do {
-          renderSample(3, 26, 4, 6)
+          renderSample(3, 26, 4, 6);
           off++;
           off &= 0xFF;
         } while (++phase1 & 0xFF);
@@ -203,19 +203,19 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
       off = pitch ^ 255 & 0xFF; // unsigned char
       const value0 = sampledConsonantValues0[kind] & 0xFF; // unsigned char
       do {
-        renderSample(2, 5, 1, value0)
+        renderSample(2, 5, 1, value0);
       } while (++off & 0xFF);
 
       return mem66;
     };
 
-    // Removed sine table stored a pre calculated sine wave but in modern CPU, we can calculate inline.
+    // Removed sine table stored a pre-calculated sine wave but in modern CPU, we can calculate inline.
     const sinus = (x) => {
       return ((Math.sin(
         (2*Math.PI)*
         (x/255)
       )*128 | 0)/16|0)*16;
-    }
+    };
 
     let speedcounter = speed;
     let phase1 = 0;
@@ -226,12 +226,12 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
     let glottal_pulse = pitches[0];
     let mem38 = glottal_pulse * .75 |0;
 
-    while(frameCount) {
+    while (frameCount) {
       const flags = sampledConsonantFlag[pos];
 
       // unvoiced sampled phoneme?
       if ((flags & 248) !== 0) {
-        mem66 = RenderSample(mem66, flags, pos);
+        mem66 = renderSample(mem66, flags, pos);
         // skip ahead two in the phoneme buffer
         pos += 2;
         frameCount -= 2;
@@ -243,38 +243,38 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
           // 128-255 = 0x70
 
           // Remove multtable, replace with logical equivalent.
-          // Multtable stored the result of a 8-bit signed multiply of the upper nibble of sin/rect (interpreted as signed)
+          // Multtable stored the result of an 8-bit signed multiply of the upper nibble of sin/rect (interpreted as signed)
           // and the amplitude lower nibble (interpreted as unsigned), then divided by two.
           // On the 6510 this made sense, but in modern processors it's way faster and cleaner to simply do the multiply.
           // simulate the glottal pulse and formants
-          const ary = []
-          let /* unsigned int */ p1 = phase1 * 256; // Fixed point integers because we need to divide later on
-          let /* unsigned int */ p2 = phase2 * 256;
-          let /* unsigned int */ p3 = phase3 * 256;
-          for (let k=0; k<5; k++) {
-            const /* signed char */ sp1 = sinus(0xff & (p1>>8));
-            const /* signed char */ sp2 = sinus(0xff & (p2>>8));
-            const /* signed char */ rp3 = ((0xff & (p3>>8))<129) ? -0x70 : 0x70;
-            const /* signed int */ sin1 = sp1 * (/* (unsigned char) */ amplitude[0][pos] & 0x0F);
-            const /* signed int */ sin2 = sp2 * (/* (unsigned char) */ amplitude[1][pos] & 0x0F);
-            const /* signed int */ rect = rp3 * (/* (unsigned char) */ amplitude[2][pos] & 0x0F);
-            let /* signed int */ mux = sin1 + sin2 + rect;
+          const ary = [];
+          let p1 = phase1 * 256; // Fixed point integers because we need to divide later on
+          let p2 = phase2 * 256;
+          let p3 = phase3 * 256;
+          for (let k = 0; k < 5; k++) {
+            const sp1 = sinus(0xff & (p1 >> 8));
+            const sp2 = sinus(0xff & (p2 >> 8));
+            const rp3 = ((0xff & (p3 >> 8)) < 129) ? -0x70 : 0x70;
+            const sin1 = sp1 * (amplitude[0][pos] & 0x0F);
+            const sin2 = sp2 * (amplitude[1][pos] & 0x0F);
+            const rect = rp3 * (amplitude[2][pos] & 0x0F);
+            let mux = sin1 + sin2 + rect;
             mux /= 32;
             mux += 128; // Go from signed to unsigned amplitude
-            ary[k] = mux |0;
+            ary[k] = mux | 0;
             p1 += frequency[0][pos] * 256 / 4; // Compromise, this becomes a shift and works well
             p2 += frequency[1][pos] * 256 / 4;
             p3 += frequency[2][pos] * 256 / 4;
           }
-          Output.ary(0, ary);
+          output.ary(0, ary);
         }
 
         speedcounter--;
         if (speedcounter === 0) {
-          pos++; //go to next amplitude
+          pos++; // go to the next amplitude
           // decrement the frame count
           frameCount--;
-          if(frameCount === 0) {
+          if (frameCount === 0) {
             return;
           }
           speedcounter = speed;
@@ -282,13 +282,13 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
 
         glottal_pulse--;
 
-        if(glottal_pulse !== 0) {
+        if (glottal_pulse !== 0) {
           // not finished with a glottal pulse
 
           mem38--;
           // within the first 75% of the glottal pulse?
           // is the count non-zero and the sampled flag is zero?
-          if((mem38 !== 0) || (flags === 0)) {
+          if ((mem38 !== 0) || (flags === 0)) {
             // reset the phase of the formants to match the pulse
             // TODO: we should have a switch to disable this, it causes a pretty nice voice without the masking!
             phase1 = phase1 + frequency[0][pos]; // & 0xFF;
@@ -300,12 +300,12 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
           // voiced sampled phonemes interleave the sample with the
           // glottal pulse. The sample flag is non-zero, so render
           // the sample for the phoneme.
-          mem66 = RenderSample(mem66, flags, pos);
+          mem66 = renderSample(mem66, flags, pos);
         }
       }
 
       glottal_pulse = pitches[pos];
-      mem38 = glottal_pulse * .75 |0;
+      mem38 = glottal_pulse * .75 | 0;
 
       // reset the formant wave generators to keep them in
       // sync with the glottal pulse
@@ -316,16 +316,17 @@ export default function Renderer(phonemes, pitch, mouth, throat, speed, singmode
   }
 }
 
-function PrintOutput(pitches, frequency, amplitude, sampledConsonantFlag) {
+function printOutput(pitches, frequency, amplitude, sampledConsonantFlag) {
   function pad(num) {
     const s = '00000' + num;
     return s.substr(s.length - 5);
   }
   console.log('===========================================');
   console.log('Final data for speech output:');
-  console.log(' flags ampl1 freq1 ampl2 freq2 ampl3 freq3 pitch');
+  console.log(' flags ampl1 freq1 ampl2 freq2 ');
+  console.log(' ampl3 freq3 pitch');
   console.log('------------------------------------------------');
-  for (let i=0;i<sampledConsonantFlag.length;i++) {
+  for (let i = 0; i < sampledConsonantFlag.length; i++) {
     console.log(
       ' %s %s %s %s %s %s %s %s',
       pad(sampledConsonantFlag[i]),
