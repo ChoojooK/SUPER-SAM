@@ -1,19 +1,7 @@
-import {BREAK, END} from '../common/constants.es6'
-import {FLAG_PUNCT} from './constants.es6'
+import { BREAK, END } from '../common/constants.es6';
+import { FLAG_PUNCT } from './constants.es6';
+import { phonemeHasFlag } from './util.es6';
 
-import { phonemeHasFlag } from "./util.es6";
-
-/**
- *
- * @param {getPhoneme}       getPhoneme    Callback for retrieving phonemes.
- * @param {setPhoneme}       setPhoneme    Callback for setting phonemes.
- * @param {insertPhoneme}    insertPhoneme Callback for inserting phonemes.
- * @param {setPhonemeStress} setStress     Callback for setting phoneme stress.
- * @param {getPhonemeLength} getLength     Callback for getting phoneme length.
- * @param {setPhonemeLength} setLength     Callback for setting phoneme length.
- *
- * @return undefined
- */
 export default function InsertBreath(getPhoneme, setPhoneme, insertPhoneme, setStress, getLength, setLength) {
   let mem54 = 255;
   let len = 0; // mem55
