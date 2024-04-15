@@ -1,13 +1,10 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['mocha', 'browserify'],
-    // You may use 'ChromeCanary', 'Chromium' or any other supported browser
     browsers: ['ChromeHeadless', 'Chrome_without_security'],
-    browserDisconnectTimeout: 1000,
-    // Need to bump these really high as it times out somehow.
-    browserDisconnectTolerance: 2,
-    browserNoActivityTimeout: 300000,
-    // you can define custom flags
+    browserDisconnectTimeout: 10000, // timeout for disconnect
+    browserDisconnectTolerance: 3, // tolerance for disconnect
+    browserNoActivityTimeout: 30000, // timeout for no activity
     customLaunchers: {
       Chrome_without_security: {
         base: 'ChromeHeadless',
@@ -17,16 +14,13 @@ module.exports = function(config) {
     files: [
       'test/minimum-tests.spec.js',
       'src/**/*.es6',
-      // fixtures
       'test/**/*.json',
-      {pattern: 'test/**/*-testcase.js', include: false, serve: false, watch: true}
+      { pattern: 'test/**/*-testcase.js', include: false, serve: false, watch: true }
     ],
-    exclude: [
-    ],
+    exclude: [],
     client: {
       mocha: {
-        require: [
-        ],
+        require: []
       }
     },
     reporters: ['progress', 'mocha'],
@@ -39,16 +33,9 @@ module.exports = function(config) {
       'test/**/*.spec.js': ['browserify', 'sourcemap'],
       'test/**/*-testcase.js': ['browserify', 'sourcemap']
     },
-    babelPreprocessor: {
-      options: {
-        sourceMap: 'inline'
-      }
-    },
     browserify: {
       debug: true,
-      transform: [
-        'babelify'
-      ]
+      transform: ['babelify']
     }
   });
 };
