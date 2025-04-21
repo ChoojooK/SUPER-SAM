@@ -25,5 +25,4 @@ If you vibe with SAM and want to keep the project alive,
 >  
 > **Thank you for being awesome!**  
 
-**– The SAM Team**  
 *Let's give software a voice!* 🔊
